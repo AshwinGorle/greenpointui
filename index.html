@@ -39321,19 +39321,19 @@ document.getElementById('btn-download-json').addEventListener('click',()=>{
   a.click();a.remove();URL.revokeObjectURL(url);
 });
 
-window.addEventListener('DOMContentLoaded', () => {
-  // Set default sorting: relevance_score DESC
-  sortState = { key: 'lead_score', dir: 'desc' };
+// window.addEventListener('DOMContentLoaded', () => {
+//   // Set default sorting: relevance_score DESC
+//   sortState = { key: 'lead_score', dir: 'desc' };
 
-  // Sort data immediately before rendering
-  rawData.sort((a, b) => {
-    const valA = parseFloat(a.relevance_score) || 0;
-    const valB = parseFloat(b.relevance_score) || 0;
-    return valB - valA; // descending
-  });
+//   // Sort data immediately before rendering
+//   rawData.sort((a, b) => {
+//     const valA = parseFloat(a.relevance_score) || 0;
+//     const valB = parseFloat(b.relevance_score) || 0;
+//     return valB - valA; // descending
+//   });
 
-  applyFiltersAndRender();
-});
+//   applyFiltersAndRender();
+// });
 
 init();
 </script>
