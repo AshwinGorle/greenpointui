@@ -1,0 +1,413 @@
+<!-- 
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lead Details</title>
+  <style>
+    body {
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      margin: 24px;
+      color: #0f172a;
+      background: #fff;
+    }
+    h1 { margin: 0 0 8px 0; font-size: 22px; }
+    h2 { font-size: 16px; margin-top: 20px; border-bottom: 1px solid #e6eef4; padding-bottom: 4px; }
+    .meta { color: #6b7280; margin-bottom: 16px; }
+    .btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: #fff;
+      border: 1px solid #e6eef4;
+      cursor: pointer;
+      font-size: 13px;
+      text-decoration: none;
+      color: #0f172a;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .card {
+      border: 1px solid #e6eef4;
+      border-radius: 10px;
+      padding: 16px;
+      background: #fbfdff;
+    }
+    .full { grid-column: 1 / -1; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    td, th {
+      padding: 6px 8px;
+      border-bottom: 1px dashed #eef3f6;
+      vertical-align: top;
+      font-size: 13px;
+    }
+    th {
+      text-align: left;
+      color: #475569;
+      font-weight: 600;
+      background: #f9fafb;
+    }
+    a.link { color: #06b6d4; text-decoration: none; font-weight: 600; }
+    ul { margin: 4px 0 0 16px; padding: 0; }
+    .muted { color: #6b7280; }
+    pre {
+      background: #0f172a;
+      color: #e6eef4;
+      padding: 12px;
+      border-radius: 8px;
+      overflow: auto;
+      margin: 0;
+      font-size: 12px;
+    }
+    .score-box {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .score {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <h1 id="title">Lead Details</h1>
+    <a class="btn" href="./ui.html">← Back to list</a>
+  </div>
+  <div id="meta" class="meta"></div>
+
+  <div id="content" class="grid"></div>
+
+  <h3>Raw JSON</h3>
+  <pre id="json-pre"></pre>
+
+<script>
+function escapeHtml(s){ if(s===null||s===undefined) return ''; return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+const params = new URLSearchParams(location.search);
+const id = params.get('id');
+const dataStr = sessionStorage.getItem(id);
+if(!dataStr){
+  document.getElementById('meta').textContent='No data found for this record.';
+}else{
+  const data = JSON.parse(dataStr);
+  document.getElementById('title').textContent = data.firm || 'Lead Details';
+  document.getElementById('meta').textContent = `${data.location || ''} ${data.country ? '• ' + data.country : ''}`;
+
+  const content = document.getElementById('content');
+
+  // --- Company Overview ---
+  const overview = document.createElement('div');
+  overview.className = 'card full';
+  overview.innerHTML = `
+    <h2>🏗️ Company Overview</h2>
+    <p><strong>${escapeHtml(data.firm || '')}</strong></p>
+    <p class="muted">${escapeHtml(data.description || 'No description available.')}</p>
+    <table>
+      <tr><th>Website</th><td>${data.website ? `<a class="link" href="${escapeHtml(data.website)}" target="_blank">${escapeHtml(data.website)}</a>` : '—'}</td></tr>
+      <tr><th>Industry</th><td>${escapeHtml(data.industry || '—')}</td></tr>
+      <tr><th>Founded</th><td>${escapeHtml(data.founded_year || '—')}</td></tr>
+      <tr><th>Headquarters</th><td>${escapeHtml(data.headquarters || '—')}</td></tr>
+      <tr><th>Employees</th><td>${escapeHtml(data.employee_count || '—')}</td></tr>
+      <tr><th>Total Revenue (M)</th><td>${escapeHtml(data.total_revenue_m || '—')}</td></tr>
+      <tr><th>New Contracts (M)</th><td>${escapeHtml(data.new_contracts || '—')}</td></tr>
+    </table>
+  `;
+  content.appendChild(overview);
+
+  // --- Scores ---
+  const scoreCard = document.createElement('div');
+  scoreCard.className = 'card';
+  scoreCard.innerHTML = `
+    <h2>📊 Scores</h2>
+    <div class="score-box">
+      <div class="score">Lead Score: ${escapeHtml(data.lead_score || '—')}</div>
+      <div class="score">Relevance: ${escapeHtml(data.relevance_score || '—')}</div>
+      <div class="score">Completeness: ${escapeHtml(data.completeness_score || '—')}</div>
+      <div class="score">ENR Rank 2025: ${escapeHtml(data.enr_rank_2025 || '—')}</div>
+      <div class="score">ENR Rank 2024: ${escapeHtml(data.enr_rank_2024 || '—')}</div>
+    </div>
+  `;
+  content.appendChild(scoreCard);
+
+  // --- Operating Regions & Specializations ---
+  const regionSpec = document.createElement('div');
+  regionSpec.className = 'card';
+  regionSpec.innerHTML = `
+    <h2>🌍 Regions & Specializations</h2>
+    <strong>Operating Regions:</strong>
+    <ul>${(data.operating_regions || []).map(r=>`<li>${escapeHtml(r)}</li>`).join('') || '<li>—</li>'}</ul>
+    <strong>Specializations:</strong>
+    <ul>${(data.specializations || []).map(s=>`<li>${escapeHtml(s)}</li>`).join('') || '<li>—</li>'}</ul>
+  `;
+  content.appendChild(regionSpec);
+
+  // --- Notable Projects ---
+  const projects = document.createElement('div');
+  projects.className = 'card';
+  projects.innerHTML = `
+    <h2>🏗️ Notable Projects</h2>
+    <ul>${(data.notable_projects || []).map(p=>`<li>${escapeHtml(p)}</li>`).join('') || '<li>—</li>'}</ul>
+  `;
+  content.appendChild(projects);
+
+  // --- Key People ---
+  const people = document.createElement('div');
+  people.className = 'card';
+  people.innerHTML = `
+    <h2>👥 Key People</h2>
+    <table>
+      <tr><th>Name</th><th>Position</th></tr>
+      ${(data.key_people || []).map(p=>`<tr><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.position)}</td></tr>`).join('') || '<tr><td colspan="2">—</td></tr>'}
+    </table>
+  `;
+  content.appendChild(people);
+
+  // --- Contacts ---
+  const contactCard = document.createElement('div');
+  contactCard.className = 'card full';
+  contactCard.innerHTML = `
+    <h2>📞 Contact Information</h2>
+    <h4>Phone Numbers</h4>
+    <ul>${(data.contact_phones || []).map(c=>`<li>${escapeHtml(c.contact_name)} - ${escapeHtml(c.phone)} <span class="muted">(${escapeHtml(c.designation)})</span></li>`).join('') || '<li>—</li>'}</ul>
+    <h4>Email Addresses</h4>
+    <ul>${(data.contact_emails || []).map(c=>`<li>${escapeHtml(c.contact_name)} - <a href="mailto:${escapeHtml(c.email)}">${escapeHtml(c.email)}</a> <span class="muted">(${escapeHtml(c.designation)})</span></li>`).join('') || '<li>—</li>'}</ul>
+    <h4>LinkedIn Profiles</h4>
+    <ul>${(data.contact_linkedins || []).map(c=>`<li><a class="link" href="${escapeHtml(c.linkedin_url)}" target="_blank">${escapeHtml(c.contact_name)}</a> <span class="muted">(${escapeHtml(c.designation)})</span></li>`).join('') || '<li>—</li>'}</ul>
+    <h4>Validated LinkedIns</h4>
+    <ul>${(data.validated_linkedins || []).map(c=>`<li><a class="link" href="${escapeHtml(c.linkedin_url)}" target="_blank">${escapeHtml(c.contact_name)}</a> <span class="muted">(${escapeHtml(c.designation)})</span></li>`).join('') || '<li>—</li>'}</ul>
+  `;
+  content.appendChild(contactCard);
+
+  // --- Raw JSON ---
+  document.getElementById('json-pre').textContent = JSON.stringify(data, null, 2);
+}
+</script>
+</body>
+</html> -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lead Details</title>
+  <style>
+    body {
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      margin: 24px;
+      color: #0f172a;
+      background: #fff;
+    }
+    h1 { margin: 0 0 8px 0; font-size: 22px; }
+    h2 { font-size: 16px; margin-top: 20px; border-bottom: 1px solid #e6eef4; padding-bottom: 4px; }
+    .meta { color: #6b7280; margin-bottom: 16px; }
+    .btn {
+      padding: 6px 10px;
+      border-radius: 6px;
+      background: #fff;
+      border: 1px solid #e6eef4;
+      cursor: pointer;
+      font-size: 13px;
+      text-decoration: none;
+      color: #0f172a;
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .card {
+      border: 1px solid #e6eef4;
+      border-radius: 10px;
+      padding: 16px;
+      background: #fbfdff;
+    }
+    .full { grid-column: 1 / -1; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    td, th {
+      padding: 6px 8px;
+      border-bottom: 1px dashed #eef3f6;
+      vertical-align: top;
+      font-size: 13px;
+    }
+    th {
+      text-align: left;
+      color: #475569;
+      font-weight: 600;
+      background: #f9fafb;
+    }
+    a.link { color: #06b6d4; text-decoration: none; font-weight: 600; }
+    .muted { color: #6b7280; }
+    pre {
+      background: #0f172a;
+      color: #e6eef4;
+      padding: 12px;
+      border-radius: 8px;
+      overflow: auto;
+      margin: 0;
+      font-size: 12px;
+    }
+    .score-box {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .score {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      background: #22c55e;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(1.4); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <h1 id="title">Lead Details</h1>
+    <a class="btn" href="./ui.html">← Back to list</a>
+  </div>
+  <div id="meta" class="meta"></div>
+
+  <div id="content" class="grid"></div>
+
+  <h3>Raw JSON</h3>
+  <pre id="json-pre"></pre>
+
+<script>
+function escapeHtml(s){ if(s===null||s===undefined) return ''; return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+const params = new URLSearchParams(location.search);
+const id = params.get('id');
+const dataStr = sessionStorage.getItem(id);
+if(!dataStr){
+  document.getElementById('meta').textContent='No data found for this record.';
+}else{
+  const data = JSON.parse(dataStr);
+  document.getElementById('title').textContent = data.firm || 'Lead Details';
+  document.getElementById('meta').textContent = `${data.location || ''} ${data.country ? '• ' + data.country : ''}`;
+
+  const content = document.getElementById('content');
+
+  // --- Scores on Top ---
+  const scoreCard = document.createElement('div');
+  scoreCard.className = 'card full';
+  scoreCard.innerHTML = `
+    <h2>📊 Scores</h2>
+    <div class="score-box">
+      <div class="score">Lead Score: ${escapeHtml(data.lead_score || '—')}</div>
+      <div class="score">Relevance: ${escapeHtml(data.relevance_score || '—')}</div>
+      <div class="score">Completeness: ${escapeHtml(data.completeness_score || '—')}</div>
+      <div class="score">ENR Rank 2025: ${escapeHtml(data.enr_rank_2025 || '—')}</div>
+      <div class="score">ENR Rank 2024: ${escapeHtml(data.enr_rank_2024 || '—')}</div>
+    </div>
+  `;
+
+  const descriptionCard = document.createElement('div');
+  scoreCard.className = 'card full';
+  descriptionCard.innerHTML = `
+    <div class="description: ">${escapeHtml(data.description || '—')}</div>
+  `
+  
+  content.appendChild(scoreCard);
+
+  content.appendChild(descriptionCard);
+  // --- Company Overview ---
+  const overview = document.createElement('div');
+  overview.className = 'card full';
+  overview.innerHTML = `
+    <h2>🏗️ Company Overview</h2>
+    <table>
+      <tr><th>Firm</th><td>${escapeHtml(data.firm || '—')}</td></tr>
+      <tr><th>Website</th><td>${data.website ? `<a class="link" href="${escapeHtml(data.website)}" target="_blank">${escapeHtml(data.website)}</a>` : '—'}</td></tr>
+      <tr><th>Industry</th><td>${escapeHtml(data.industry || '—')}</td></tr>
+      <tr><th>Founded</th><td>${escapeHtml(data.founded_year || '—')}</td></tr>
+      <tr><th>Headquarters</th><td>${escapeHtml(data.headquarters || data.location || '—')}</td></tr>
+      <tr><th>Employees</th><td>${escapeHtml(data.employee_count || '—')}</td></tr>
+      <tr><th>Total Revenue (M)</th><td>${escapeHtml(data.total_revenue_m || '—')}</td></tr>
+      <tr><th>New Contracts (M)</th><td>${escapeHtml(data.new_contracts || '—')}</td></tr>
+    </table>
+  `;
+  content.appendChild(overview);
+
+  // --- Contact Information ---
+  const makeContactTable = (title, rows) => `
+    <div class="card full">
+      <h2>${title}</h2>
+      <table>
+        <tr><th>Name</th><th>Designation</th><th>Contact</th></tr>
+        ${rows || '<tr><td colspan="3">—</td></tr>'}
+      </table>
+    </div>`;
+
+  // Validated LinkedIns (with pulsing green dot)
+  const validatedRows = (data.validated_linkedins || []).map(c =>
+    `<tr><td><span class="pulse-dot"></span>${escapeHtml(c.contact_name)}</td><td>${escapeHtml(c.designation)}</td>
+     <td><a class="link" href="${escapeHtml(c.linkedin_url)}" target="_blank">${escapeHtml(c.linkedin_url)}</a></td></tr>`).join('');
+  content.innerHTML += makeContactTable('✅ Validated LinkedIns', validatedRows);
+
+  // LinkedIn Profiles
+  const linkedinRows = (data.contact_linkedins || []).map(c =>
+    `<tr><td>${escapeHtml(c.contact_name)}</td><td>${escapeHtml(c.designation)}</td>
+     <td><a class="link" href="${escapeHtml(c.linkedin_url)}" target="_blank">${escapeHtml(c.linkedin_url)}</a></td></tr>`).join('');
+  content.innerHTML += makeContactTable('🔗 LinkedIn Profiles', linkedinRows);
+
+  // Phone Numbers
+  const phoneRows = (data.contact_phones || []).map(c =>
+    `<tr><td>${escapeHtml(c.contact_name)}</td><td>${escapeHtml(c.designation)}</td><td>${escapeHtml(c.phone)}</td></tr>`).join('');
+  content.innerHTML += makeContactTable('📞 Phone Numbers', phoneRows);
+
+  // Email Addresses
+  const emailRows = (data.contact_emails || []).map(c =>
+    `<tr><td>${escapeHtml(c.contact_name)}</td><td>${escapeHtml(c.designation)}</td>
+     <td><a href="mailto:${escapeHtml(c.email)}">${escapeHtml(c.email)}</a></td></tr>`).join('');
+  content.innerHTML += makeContactTable('✉️ Email Addresses', emailRows);
+
+  // Key People
+  const peopleRows = (data.key_people || []).map(p =>
+    `<tr><td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.position)}</td><td>—</td></tr>`).join('');
+  content.innerHTML += makeContactTable('👥 Key People', peopleRows);
+
+  // --- Other Details ---
+  const other = document.createElement('div');
+  other.className = 'card full';
+  other.innerHTML = `
+    <h2>📍 Other Details</h2>
+    <strong>Regions:</strong>
+    <ul>${(data.operating_regions || []).map(r=>`<li>${escapeHtml(r)}</li>`).join('') || '<li>—</li>'}</ul>
+    <strong>Specializations:</strong>
+    <ul>${(data.specializations || []).map(s=>`<li>${escapeHtml(s)}</li>`).join('') || '<li>—</li>'}</ul>
+    <strong>Notable Projects:</strong>
+    <ul>${(data.notable_projects || []).map(p=>`<li>${escapeHtml(p)}</li>`).join('') || '<li>—</li>'}</ul>
+  `;
+  content.appendChild(other);
+
+  // Raw JSON
+  document.getElementById('json-pre').textContent = JSON.stringify(data, null, 2);
+}
+</script>
+</body>
+</html>

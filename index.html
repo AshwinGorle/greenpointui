@@ -1,0 +1,1441 @@
+<!-- 
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GreenPoint Energy Solutions — Leads Viewer</title>
+<style>
+  :root {
+    --header-bg: #0f172a;
+    --header-fg: #fff;
+    --accent: #06b6d4;
+    --muted: #6b7280;
+    --row-hover: #f1f5f9;
+    --max-initial-col: 200px;
+  }
+
+  body {
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    margin: 16px;
+    background: #fbfdff;
+    color: #0f172a;
+  }
+
+  h1 {
+    margin: 0 0 12px 0;
+    font-size: 20px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+
+  .topbar {
+    display:flex;
+    gap:12px;
+    align-items:center;
+    margin-bottom:8px;
+  }
+
+  .note {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .table-wrap {
+    border: 1px solid #e6eef4;
+    border-radius: 8px;
+    overflow: auto;
+    background:white;
+    box-shadow: 0 4px 10px rgba(2,6,23,0.04);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+    min-width: 800px;
+  }
+
+  thead th {
+    position: relative;
+    background: linear-gradient(180deg, rgba(15,23,42,0.95), rgba(15,23,42,0.95));
+    color: var(--header-fg);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 8px;
+    font-size: 13px;
+    vertical-align: bottom;
+    text-align: left;
+  }
+
+  thead .col-head {
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content: flex-start;
+  }
+
+  thead .col-head .title {
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  thead .actions {
+    display:flex;
+    gap:6px;
+    align-items:center;
+    margin-left:auto;
+  }
+
+  thead .sort-btn {
+    cursor:pointer;
+    border-radius:4px;
+    padding:4px;
+    font-size:12px;
+    color:var(--header-fg);
+    opacity:0.85;
+  }
+  thead .sort-btn.active { background: rgba(255,255,255,0.06); }
+
+  thead .filter {
+    display:block;
+    margin-top:6px;
+  }
+
+  thead input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding:6px 8px;
+    border-radius:6px;
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 13px;
+    background: rgba(255,255,255,0.03);
+    color: var(--header-fg);
+  }
+
+  tbody td {
+    padding: 8px;
+    border-bottom: 1px solid #eef3f6;
+    font-size: 13px;
+    vertical-align: top;
+  }
+
+  tbody tr:hover { background: var(--row-hover); }
+
+  .cell {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: var(--max-initial-col);
+    display: block;
+  }
+
+  .view-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding:6px 8px;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:600;
+    font-size:13px;
+  }
+
+  .resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 8px;
+    cursor: col-resize;
+    z-index: 5;
+    user-select: none;
+  }
+
+  .resizer::after {
+    content: "";
+    display:block;
+    position: absolute;
+    right: 3px;
+    top: 25%;
+    bottom: 25%;
+    width: 1px;
+    background: rgba(255,255,255,0.12);
+  }
+
+  .small-muted {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .controls {
+    margin-left:auto;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .btn {
+    padding:6px 10px;
+    border-radius:6px;
+    background:#fff;
+    border:1px solid #e6eef4;
+    cursor:pointer;
+    font-size:13px;
+  }
+
+  .no-data {
+    padding: 36px;
+    text-align: center;
+  }
+
+  @media (max-width: 800px) {
+    table { min-width: 700px; }
+    thead input[type="text"] { font-size:12px; }
+  }
+</style>
+</head>
+<body>
+  <h1>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style="vertical-align:middle">
+      <rect x="3" y="3" width="18" height="18" rx="4" fill="#06b6d4"></rect>
+      <path d="M7 12h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M7 16h4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    GreenPoint Energy Solutions — Leads
+  </h1>
+  <div class="topbar">
+    <div class="note">Interactive leads table (using static fallback data)</div>
+    <div class="controls" style="margin-left:auto">
+      <button id="btn-reset-filters" class="btn">Reset filters</button>
+      <button id="btn-toggle-wrap" class="btn">Toggle wrap</button>
+      <button id="btn-download-json" class="btn">Download visible JSON</button>
+    </div>
+  </div>
+
+  <div id="table-area" class="table-wrap" aria-live="polite">
+    <div class="no-data" id="loading-msg">Loading data…</div>
+  </div>
+
+<script>
+/* Static-only version — no JSON fetch */
+
+// ---------- fallback static data ----------
+const FALLBACK_DATA = [
+  {
+    "enr_rank_2025": 1.0,
+    "enr_rank_2024": 1.0,
+    "firm": "TURNER CONSTRUCTION CO.",
+    "total_revenue_m": "20,241.4",
+    "int_total_revenue_m": "591.9",
+    "new_contracts": "26,136.4",
+    "general_building_pct": 60.0,
+    "water_supply_pct": 0.0,
+    "location": "New York, N.Y.",
+    "website": "turnerconstruction.com",
+    "headquarters": "375 Hudson Street, New York, NY 10014, United States",
+    "country": "United States",
+    "description": "Turner Construction Company is a North America-based, international construction services company and a leading builder in diverse market segments. It is recognized for undertaking large, complex projects, fostering innovation, embracing emerging technologies, and making a difference for its clients, employees, and community.",
+    "industry": "Construction",
+    "founded_year": "1902",
+    "employee_count": "18000",
+    "revenue_m": "13400",
+    "operating_regions": [
+      "North America",
+      "Africa",
+      "Asia",
+      "Europe",
+      "India",
+      "30 countries worldwide"
+    ],
+    "specializations": [
+      "Construction Management",
+      "General Contracting",
+      "Consulting",
+      "Construction Procurement",
+      "Insurance and Risk Management",
+      "Commercial Building Construction",
+      "Municipal Building Construction",
+      "Hospital Construction",
+      "Construction Project Management Services",
+      "Lean Construction",
+      "Green Building",
+      "Building Information Modeling",
+      "Medical Planning & Procurement",
+      "Facility Management Solutions",
+      "Design/Build",
+      "Engineering",
+      "Resiliency",
+      "Mass Timber"
+    ],
+    "notable_projects": [
+      "United Nations Secretariat Building",
+      "Madison Square Garden",
+      "One Chase Manhattan Plaza",
+      "Lincoln Center",
+      "Rose Garden (Portland)",
+      "Bank of America Stadium (Charlotte)",
+      "SoFi Stadium (Los Angeles)",
+      "Intuit Dome (Los Angeles)",
+      "State Farm Arena (Atlanta)",
+      "Barclays Center (New York)",
+      "Nissan Stadium (Tennessee)",
+      "Buffalo Bills new stadium",
+      "New Arena for Philadelphia 76ers and Philadelphia Flyers"
+    ],
+    "key_people": [
+      {
+        "name": "Peter Davoren",
+        "position": "Chairman and Chief Executive Officer"
+      },
+      {
+        "name": "Christa Andresky",
+        "position": "Executive Vice President and Chief Financial Officer"
+      },
+      {
+        "name": "Rosemarie Demonte",
+        "position": "Executive Vice President and Chief Human Resources Officer"
+      },
+      {
+        "name": "Abrar Sheriff",
+        "position": "President and CEO of Turner International"
+      },
+      {
+        "name": "Patrick Blake",
+        "position": "Senior Vice President and Chief Legal Officer"
+      },
+      {
+        "name": "Lars Leitner",
+        "position": "Senior Vice President and Chief Strategy Officer"
+      }
+    ],
+    "contact_phones": [
+      {
+        "contact_name": "Headquarters",
+        "phone": "(212) 229-6000",
+        "designation": "General"
+      },
+      {
+        "contact_name": "Lisa Hickerson",
+        "phone": "(212) 229-6434",
+        "designation": "Business Development Manager"
+      },
+      {
+        "contact_name": "Janice Haughton",
+        "phone": "(212) 229-6158",
+        "designation": "Community & Citizenship Director"
+      },
+      {
+        "contact_name": "Sam Battaglia",
+        "phone": "(212) 229-6378",
+        "designation": "Vice President, Preconstruction Management"
+      },
+      {
+        "contact_name": "Jason Obergfell",
+        "phone": "(212) 229-6305",
+        "designation": "Senior Preconstruction Manager"
+      },
+      {
+        "contact_name": "Bert J. Rahm",
+        "phone": "(212) 229-6043",
+        "designation": "Vice President, General Manager (Core & Shell)"
+      },
+      {
+        "contact_name": "Charles Murphy",
+        "phone": "(212) 229-6275",
+        "designation": "Senior Vice President"
+      },
+      {
+        "contact_name": "Charlie Whitney",
+        "phone": "(212) 229-6063",
+        "designation": "Vice President, General Manager (Core & Shell)"
+      },
+      {
+        "contact_name": "Christopher Zegler",
+        "phone": "(212) 229-6193",
+        "designation": "Vice President, General Manager (Core & Shell)"
+      },
+      {
+        "contact_name": "Daniel Fine",
+        "phone": "(212) 229-6000",
+        "designation": "Vice President, General Manager (Interiors)"
+      },
+      {
+        "contact_name": "Sara N. Kendall",
+        "phone": "(212) 229-6123",
+        "designation": "Vice President, General Manager (Interiors)"
+      },
+      {
+        "contact_name": "Ethics & Compliance Hotline",
+        "phone": "(888) 738-1924",
+        "designation": "Confidential Reporting System"
+      }
+    ],
+    "contact_emails": [
+      {
+        "contact_name": "General",
+        "email": "turner@tcco.com",
+        "designation": "General Inquiry"
+      },
+      {
+        "contact_name": "Lisa Hickerson",
+        "email": "lhickerson@tcco.com",
+        "designation": "Business Development Manager"
+      },
+      {
+        "contact_name": "Janice Haughton",
+        "email": "jhaughton@tcco.com",
+        "designation": "Community & Citizenship Director"
+      },
+      {
+        "contact_name": "Sam Battaglia",
+        "email": "sbattaglia@tcco.com",
+        "designation": "Vice President, Preconstruction Management"
+      },
+      {
+        "contact_name": "Jason Obergfell",
+        "email": "jobergfell@tcco.com",
+        "designation": "Senior Preconstruction Manager"
+      }
+    ],
+    "contact_linkedins": [],
+    "sequence": 1,
+    "lead_score": 70,
+    "completeness_score": 1.0,
+    "relevance_score": 0.8,
+    "validated_linkedins": [
+      {
+        "contact_name": "Patrick Blake",
+        "designation": "Senior Vice President and Chief Legal Officer",
+        "linkedin_url": "https://www.linkedin.com/in/patrick-blake-129a116"
+      },
+      {
+        "contact_name": "Lars Leitner",
+        "designation": "Senior Vice President and Chief Strategy Officer",
+        "linkedin_url": "https://www.linkedin.com/in/lars-leitner-b15942137"
+      },
+      {
+        "contact_name": "Lisa Hickerson",
+        "designation": "Business Development Manager",
+        "linkedin_url": "https://www.linkedin.com/in/lisa-hickerson-753a9275"
+      },
+      {
+        "contact_name": "Jason Obergfell",
+        "designation": "Senior Preconstruction Manager",
+        "linkedin_url": "https://www.linkedin.com/in/jasonobergfell"
+      },
+      {
+        "contact_name": "Charles Murphy",
+        "designation": "Senior Vice President",
+        "linkedin_url": "https://www.linkedin.com/in/charles-murphy-091139206"
+      },
+      {
+        "contact_name": "Charlie Whitney",
+        "designation": "Vice President, General Manager (Core & Shell)",
+        "linkedin_url": "https://www.linkedin.com/in/charlie-whitney-39ab6613"
+      },
+      {
+        "contact_name": "Christopher Zegler",
+        "designation": "Vice President, General Manager (Core & Shell)",
+        "linkedin_url": "https://www.linkedin.com/in/curt-zegler-6b0767129"
+      }
+    ]
+  },
+  ];
+
+function isPlainObject(val) {
+  return val && typeof val === 'object' && !Array.isArray(val);
+}
+function stringifyCell(val) {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+  try {
+    if (Array.isArray(val)) {
+      if (val.length === 0) return '[]';
+      if (val.every(x => typeof x === 'string' || typeof x === 'number')) {
+        return val.slice(0,5).join(', ') + (val.length>5 ? '…' : '');
+      }
+    }
+    const small = JSON.stringify(val, null, 0);
+    return small.length > 80 ? small.slice(0,80) + '…' : small;
+  } catch(e) {
+    return String(val);
+  }
+}
+
+// ---------- state ----------
+let rawData = FALLBACK_DATA;
+let visibleData = [];
+let columns = [];
+let sortState = { key: null, dir: null };
+let filters = {};
+
+// ---------- initialize ----------
+function init() {
+  const msg = document.getElementById('loading-msg');
+  msg && msg.remove();
+  prepareColumns();
+  applyFiltersAndRender();
+}
+
+// ---------- columns ----------
+function prepareColumns() {
+  if (!rawData || rawData.length === 0) return;
+  const sample = rawData[0];
+  const preferred = ['firm','website','location','headquarters','industry','lead_score','employee_count','validated_linkedins'];
+  const keys = new Set(Object.keys(sample));
+  columns = [];
+  preferred.forEach(k => { if (keys.has(k)) { columns.push({key:k,title:k,type:guessType(sample[k])}); keys.delete(k);} });
+  Array.from(keys).sort().forEach(k => columns.push({key:k,title:k,type:guessType(sample[k])}));
+}
+function guessType(v) {
+  if (typeof v === 'number') return 'number';
+  if (Array.isArray(v)) return 'array';
+  if (isPlainObject(v)) return 'object';
+  return 'string';
+}
+
+// ---------- filtering, sorting, rendering ----------
+function applyFiltersAndRender() {
+  visibleData = rawData.filter(item => {
+    for (const key in filters) {
+      const q = filters[key].trim().toLowerCase();
+      if (!q) continue;
+      const cell = stringifyCell(item[key] ?? '');
+      if (!cell.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (sortState.key && sortState.dir) {
+    const k = sortState.key;
+    const dir = sortState.dir === 'asc' ? 1 : -1;
+    visibleData.sort((a,b)=>compareCells(a[k],b[k])*dir);
+  }
+
+  renderTable();
+}
+function compareCells(a,b){
+  const as=stringifyCell(a).toLowerCase(), bs=stringifyCell(b).toLowerCase();
+  if(as<bs)return-1;if(as>bs)return 1;return 0;
+}
+
+// ---------- render table ----------
+function renderTable(){
+  const wrap=document.getElementById('table-area');
+  wrap.innerHTML='';
+  if(!columns.length){wrap.innerHTML='<div class="no-data">No data.</div>';return;}
+  const table=document.createElement('table');
+  const thead=document.createElement('thead');
+  const tr=document.createElement('tr');
+
+  const thView=document.createElement('th');
+  thView.style.width='90px';
+  thView.innerHTML='<div class="col-head"><span class="title">View</span></div>';
+  tr.appendChild(thView);
+
+  columns.forEach(col=>{
+    const th=document.createElement('th');
+    const initW=Math.min(200,Math.max(110,col.title.length*12));
+    th.style.width=initW+'px';
+    th.setAttribute('data-key',col.key);
+
+    const head=document.createElement('div');
+    head.className='col-head';
+    const title=document.createElement('div');
+    title.className='title';
+    title.textContent=col.title;
+    head.appendChild(title);
+
+    const actions=document.createElement('div');
+    actions.className='actions';
+    const sortBtn=document.createElement('div');
+    sortBtn.className='sort-btn';
+    updateSortBtnUI(sortBtn,col.key);
+    sortBtn.addEventListener('click',()=>{
+      toggleSort(col.key);
+      document.querySelectorAll('.sort-btn').forEach(elem=>{
+        updateSortBtnUI(elem,elem.parentElement.parentElement.getAttribute('data-key'));
+      });
+    });
+    actions.appendChild(sortBtn);
+    head.appendChild(actions);
+    th.appendChild(head);
+
+    const filterDiv=document.createElement('div');
+    filterDiv.className='filter';
+    const input=document.createElement('input');
+    input.type='text';
+    input.placeholder='Filter...';
+    input.value=filters[col.key]||'';
+    input.addEventListener('input',e=>{
+      filters[col.key]=e.target.value;
+      applyFiltersAndRender();
+    });
+    filterDiv.appendChild(input);
+    th.appendChild(filterDiv);
+
+    const resizer=document.createElement('div');
+    resizer.className='resizer';
+    setupColumnResizer(th,resizer);
+    th.appendChild(resizer);
+    tr.appendChild(th);
+  });
+
+  thead.appendChild(tr);
+  table.appendChild(thead);
+
+  const tbody=document.createElement('tbody');
+  if(visibleData.length===0){
+    const trEmpty=document.createElement('tr');
+    const tdEmpty=document.createElement('td');
+    tdEmpty.colSpan=columns.length+1;
+    tdEmpty.innerHTML='<div style="padding:20px"><strong>No rows match filters</strong><div class="small-muted">Clear filters to view all leads</div></div>';
+    trEmpty.appendChild(tdEmpty);
+    tbody.appendChild(trEmpty);
+  }else{
+    visibleData.forEach(row=>{
+      const trRow=document.createElement('tr');
+      const tdView=document.createElement('td');
+      tdView.style.width='90px';
+      const vbtn=document.createElement('button');
+      vbtn.className='view-btn';
+      vbtn.textContent='View';
+      vbtn.addEventListener('click',()=>openDetailPage(row));
+      tdView.appendChild(vbtn);
+      trRow.appendChild(tdView);
+
+      columns.forEach(col=>{
+        const td=document.createElement('td');
+        const val=row[col.key];
+        const span=document.createElement('span');
+        span.className='cell';
+        span.title=stringifyCell(val);
+        span.textContent=stringifyCell(val);
+        td.appendChild(span);
+        trRow.appendChild(td);
+      });
+
+      tbody.appendChild(trRow);
+    });
+  }
+
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+}
+
+// ---------- sorting ----------
+function toggleSort(key){
+  if(sortState.key!==key){sortState.key=key;sortState.dir='asc';}
+  else{
+    if(sortState.dir==='asc')sortState.dir='desc';
+    else if(sortState.dir==='desc'){sortState.key=null;sortState.dir=null;}
+    else sortState.dir='asc';
+  }
+  applyFiltersAndRender();
+}
+function updateSortBtnUI(btnElem,key){
+  const active=sortState.key===key&&sortState.dir;
+  btnElem.classList.toggle('active',active);
+  if(!active)btnElem.textContent='⇅';
+  else btnElem.textContent=sortState.dir==='asc'?'↑':'↓';
+}
+
+// ---------- column resizing ----------
+function setupColumnResizer(th,handle){
+  let startX,startWidth;
+  handle.addEventListener('mousedown',function(e){
+    e.preventDefault();
+    startX=e.clientX;
+    startWidth=th.getBoundingClientRect().width;
+    document.body.style.cursor='col-resize';
+    function onMouseMove(ev){
+      const dx=ev.clientX-startX;
+      let newW=Math.max(60,startWidth+dx);
+      th.style.width=newW+'px';
+    }
+    function onMouseUp(){
+      document.removeEventListener('mousemove',onMouseMove);
+      document.removeEventListener('mouseup',onMouseUp);
+      document.body.style.cursor='';
+    }
+    document.addEventListener('mousemove',onMouseMove);
+    document.addEventListener('mouseup',onMouseUp);
+  });
+}
+
+// ---------- open detail ----------
+function openDetailPage(row){
+  const id='lead_'+(row.sequence||Math.random().toString(36).slice(2));
+  sessionStorage.setItem(id,JSON.stringify(row));
+  const url='lead_detail.html?id='+encodeURIComponent(id);
+  window.open(url,'_blank');
+}
+
+// ---------- controls ----------
+document.getElementById('btn-reset-filters').addEventListener('click',()=>{
+  filters={};sortState={key:null,dir:null};
+  document.querySelectorAll('thead input[type="text"]').forEach(i=>i.value='');
+  applyFiltersAndRender();
+});
+let wrapText=false;
+document.getElementById('btn-toggle-wrap').addEventListener('click',()=>{
+  wrapText=!wrapText;
+  document.querySelectorAll('.cell').forEach(c=>{
+    if(wrapText){c.style.whiteSpace='normal';c.style.maxWidth='none';}
+    else{c.style.whiteSpace='nowrap';c.style.maxWidth='var(--max-initial-col)';}
+  });
+});
+document.getElementById('btn-download-json').addEventListener('click',()=>{
+  const dataStr=JSON.stringify(visibleData,null,2);
+  const blob=new Blob([dataStr],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='leads_visible.json';
+  document.body.appendChild(a);
+  a.click();a.remove();URL.revokeObjectURL(url);
+});
+
+// ---------- run ----------
+init();
+</script>
+</body>
+</html> -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GreenPoint Energy Solutions — Leads Viewer</title>
+<style>
+  :root {
+    --header-bg: #0f172a;
+    --header-fg: #fff;
+    --accent: #06b6d4;
+    --muted: #6b7280;
+    --row-hover: #f1f5f9;
+    --max-initial-col: 200px;
+  }
+
+  body {
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    margin: 16px;
+    background: #fbfdff;
+    color: #0f172a;
+  }
+
+  h1 {
+    margin: 0 0 12px 0;
+    font-size: 20px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+
+  .topbar {
+    display:flex;
+    gap:12px;
+    align-items:center;
+    margin-bottom:8px;
+  }
+
+  .note {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .table-wrap {
+    border: 1px solid #e6eef4;
+    border-radius: 8px;
+    overflow: auto;
+    background:white;
+    box-shadow: 0 4px 10px rgba(2,6,23,0.04);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    table-layout: fixed;
+    min-width: 800px;
+  }
+
+  thead th {
+    position: relative;
+    background: linear-gradient(180deg, rgba(15,23,42,0.95), rgba(15,23,42,0.95));
+    color: var(--header-fg);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding: 8px;
+    font-size: 13px;
+    vertical-align: bottom;
+    text-align: left;
+  }
+
+  thead .col-head {
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content: flex-start;
+  }
+
+  thead .col-head .title {
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  thead .actions {
+    display:flex;
+    gap:6px;
+    align-items:center;
+    margin-left:auto;
+  }
+
+  thead .sort-btn {
+    cursor:pointer;
+    border-radius:4px;
+    padding:4px;
+    font-size:12px;
+    color:var(--header-fg);
+    opacity:0.85;
+  }
+  thead .sort-btn.active { background: rgba(255,255,255,0.06); }
+
+  thead .filter {
+    display:block;
+    margin-top:6px;
+  }
+
+  thead input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding:6px 8px;
+    border-radius:6px;
+    border: 1px solid rgba(255,255,255,0.06);
+    font-size: 13px;
+    background: rgba(255,255,255,0.03);
+    color: var(--header-fg);
+  }
+
+  tbody td {
+    padding: 8px;
+    border-bottom: 1px solid #eef3f6;
+    font-size: 13px;
+    vertical-align: top;
+  }
+
+  tbody tr:hover { background: var(--row-hover); }
+
+  .cell {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: var(--max-initial-col);
+    display: block;
+  }
+
+  .view-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding:6px 8px;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:600;
+    font-size:13px;
+  }
+
+  .resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 8px;
+    cursor: col-resize;
+    z-index: 5;
+    user-select: none;
+  }
+
+  .resizer::after {
+    content: "";
+    display:block;
+    position: absolute;
+    right: 3px;
+    top: 25%;
+    bottom: 25%;
+    width: 1px;
+    background: rgba(255,255,255,0.12);
+  }
+
+  .small-muted {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .controls {
+    margin-left:auto;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .btn {
+    padding:6px 10px;
+    border-radius:6px;
+    background:#fff;
+    border:1px solid #e6eef4;
+    cursor:pointer;
+    font-size:13px;
+  }
+
+  .no-data {
+    padding: 36px;
+    text-align: center;
+  }
+
+  @media (max-width: 800px) {
+    table { min-width: 700px; }
+    thead input[type="text"] { font-size:12px; }
+  }
+</style>
+</head>
+<body>
+  <h1>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style="vertical-align:middle">
+      <rect x="3" y="3" width="18" height="18" rx="4" fill="#06b6d4"></rect>
+      <path d="M7 12h10" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M7 16h4" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/>
+    </svg>
+    GreenPoint Energy Solutions — Leads
+  </h1>
+  <div class="topbar">
+    <div class="note">Interactive leads table (using static fallback data)</div>
+    <div class="controls" style="margin-left:auto">
+      <button id="btn-reset-filters" class="btn">Reset filters</button>
+      <button id="btn-toggle-wrap" class="btn">Toggle wrap</button>
+      <button id="btn-download-json" class="btn">Download visible JSON</button>
+    </div>
+  </div>
+
+  <div id="table-area" class="table-wrap" aria-live="polite">
+    <div class="no-data" id="loading-msg">Loading data…</div>
+  </div>
+
+<script>
+/* Static-only version — no JSON fetch */
+
+// ---------- fallback static data ----------
+const FALLBACK_DATA = [
+  {
+    "enr_rank_2025": 1.0,
+    "enr_rank_2024": 1.0,
+    "firm": "TURNER CONSTRUCTION CO.",
+    "total_revenue_m": "20,241.4",
+    "int_total_revenue_m": "591.9",
+    "new_contracts": "26,136.4",
+    "general_building_pct": 60.0,
+    "water_supply_pct": 0.0,
+    "location": "New York, N.Y.",
+    "website": "turnerconstruction.com",
+    "headquarters": "375 Hudson Street, New York, NY 10014, United States",
+    "country": "United States",
+    "description": "Turner Construction Company is a North America-based, international construction services company and a leading builder in diverse market segments. It is recognized for undertaking large, complex projects, fostering innovation, embracing emerging technologies, and making a difference for its clients, employees, and community.",
+    "industry": "Construction",
+    "founded_year": "1902",
+    "employee_count": "18000",
+    "revenue_m": "13400",
+    "operating_regions": [
+      "North America",
+      "Africa",
+      "Asia",
+      "Europe",
+      "India",
+      "30 countries worldwide"
+    ],
+    "specializations": [
+      "Construction Management",
+      "General Contracting",
+      "Consulting",
+      "Construction Procurement",
+      "Insurance and Risk Management",
+      "Commercial Building Construction",
+      "Municipal Building Construction",
+      "Hospital Construction",
+      "Construction Project Management Services",
+      "Lean Construction",
+      "Green Building",
+      "Building Information Modeling",
+      "Medical Planning & Procurement",
+      "Facility Management Solutions",
+      "Design/Build",
+      "Engineering",
+      "Resiliency",
+      "Mass Timber"
+    ],
+    "notable_projects": [
+      "United Nations Secretariat Building",
+      "Madison Square Garden",
+      "One Chase Manhattan Plaza",
+      "Lincoln Center",
+      "Rose Garden (Portland)",
+      "Bank of America Stadium (Charlotte)",
+      "SoFi Stadium (Los Angeles)",
+      "Intuit Dome (Los Angeles)",
+      "State Farm Arena (Atlanta)",
+      "Barclays Center (New York)",
+      "Nissan Stadium (Tennessee)",
+      "Buffalo Bills new stadium",
+      "New Arena for Philadelphia 76ers and Philadelphia Flyers"
+    ],
+    "key_people": [
+      {
+        "name": "Peter Davoren",
+        "position": "Chairman and Chief Executive Officer"
+      },
+      {
+        "name": "Christa Andresky",
+        "position": "Executive Vice President and Chief Financial Officer"
+      },
+      {
+        "name": "Rosemarie Demonte",
+        "position": "Executive Vice President and Chief Human Resources Officer"
+      },
+      {
+        "name": "Abrar Sheriff",
+        "position": "President and CEO of Turner International"
+      },
+      {
+        "name": "Patrick Blake",
+        "position": "Senior Vice President and Chief Legal Officer"
+      },
+      {
+        "name": "Lars Leitner",
+        "position": "Senior Vice President and Chief Strategy Officer"
+      }
+    ],
+    "contact_phones": [
+      {
+        "contact_name": "Headquarters",
+        "phone": "(212) 229-6000",
+        "designation": "General"
+      },
+      {
+        "contact_name": "Lisa Hickerson",
+        "phone": "(212) 229-6434",
+        "designation": "Business Development Manager"
+      },
+      {
+        "contact_name": "Janice Haughton",
+        "phone": "(212) 229-6158",
+        "designation": "Community & Citizenship Director"
+      },
+      {
+        "contact_name": "Sam Battaglia",
+        "phone": "(212) 229-6378",
+        "designation": "Vice President, Preconstruction Management"
+      },
+      {
+        "contact_name": "Jason Obergfell",
+        "phone": "(212) 229-6305",
+        "designation": "Senior Preconstruction Manager"
+      },
+      {
+        "contact_name": "Bert J. Rahm",
+        "phone": "(212) 229-6043",
+        "designation": "Vice President, General Manager (Core & Shell)"
+      },
+      {
+        "contact_name": "Charles Murphy",
+        "phone": "(212) 229-6275",
+        "designation": "Senior Vice President"
+      },
+      {
+        "contact_name": "Charlie Whitney",
+        "phone": "(212) 229-6063",
+        "designation": "Vice President, General Manager (Core & Shell)"
+      },
+      {
+        "contact_name": "Christopher Zegler",
+        "phone": "(212) 229-6193",
+        "designation": "Vice President, General Manager (Core & Shell)"
+      },
+      {
+        "contact_name": "Daniel Fine",
+        "phone": "(212) 229-6000",
+        "designation": "Vice President, General Manager (Interiors)"
+      },
+      {
+        "contact_name": "Sara N. Kendall",
+        "phone": "(212) 229-6123",
+        "designation": "Vice President, General Manager (Interiors)"
+      },
+      {
+        "contact_name": "Ethics & Compliance Hotline",
+        "phone": "(888) 738-1924",
+        "designation": "Confidential Reporting System"
+      }
+    ],
+    "contact_emails": [
+      {
+        "contact_name": "General",
+        "email": "turner@tcco.com",
+        "designation": "General Inquiry"
+      },
+      {
+        "contact_name": "Lisa Hickerson",
+        "email": "lhickerson@tcco.com",
+        "designation": "Business Development Manager"
+      },
+      {
+        "contact_name": "Janice Haughton",
+        "email": "jhaughton@tcco.com",
+        "designation": "Community & Citizenship Director"
+      },
+      {
+        "contact_name": "Sam Battaglia",
+        "email": "sbattaglia@tcco.com",
+        "designation": "Vice President, Preconstruction Management"
+      },
+      {
+        "contact_name": "Jason Obergfell",
+        "email": "jobergfell@tcco.com",
+        "designation": "Senior Preconstruction Manager"
+      }
+    ],
+    "contact_linkedins": [],
+    "sequence": 1,
+    "lead_score": 70,
+    "completeness_score": 1.0,
+    "relevance_score": 0.8,
+    "validated_linkedins": [
+      {
+        "contact_name": "Patrick Blake",
+        "designation": "Senior Vice President and Chief Legal Officer",
+        "linkedin_url": "https://www.linkedin.com/in/patrick-blake-129a116"
+      },
+      {
+        "contact_name": "Lars Leitner",
+        "designation": "Senior Vice President and Chief Strategy Officer",
+        "linkedin_url": "https://www.linkedin.com/in/lars-leitner-b15942137"
+      },
+      {
+        "contact_name": "Lisa Hickerson",
+        "designation": "Business Development Manager",
+        "linkedin_url": "https://www.linkedin.com/in/lisa-hickerson-753a9275"
+      },
+      {
+        "contact_name": "Jason Obergfell",
+        "designation": "Senior Preconstruction Manager",
+        "linkedin_url": "https://www.linkedin.com/in/jasonobergfell"
+      },
+      {
+        "contact_name": "Charles Murphy",
+        "designation": "Senior Vice President",
+        "linkedin_url": "https://www.linkedin.com/in/charles-murphy-091139206"
+      },
+      {
+        "contact_name": "Charlie Whitney",
+        "designation": "Vice President, General Manager (Core & Shell)",
+        "linkedin_url": "https://www.linkedin.com/in/charlie-whitney-39ab6613"
+      },
+      {
+        "contact_name": "Christopher Zegler",
+        "designation": "Vice President, General Manager (Core & Shell)",
+        "linkedin_url": "https://www.linkedin.com/in/curt-zegler-6b0767129"
+      }
+    ]
+  },
+  ]
+
+function isPlainObject(val) {
+  return val && typeof val === 'object' && !Array.isArray(val);
+}
+function stringifyCell(val) {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'string') return val;
+  if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+  try {
+    if (Array.isArray(val)) {
+      if (val.length === 0) return '[]';
+      if (val.every(x => typeof x === 'string' || typeof x === 'number')) {
+        return val.slice(0,5).join(', ') + (val.length>5 ? '…' : '');
+      }
+    }
+    const small = JSON.stringify(val, null, 0);
+    return small.length > 80 ? small.slice(0,80) + '…' : small;
+  } catch(e) {
+    return String(val);
+  }
+}
+
+// ---------- state ----------
+let rawData = FALLBACK_DATA;
+let visibleData = [];
+let columns = [];
+let sortState = { key: null, dir: null };
+let filters = {};
+
+// ---------- initialize ----------
+function init() {
+  const msg = document.getElementById('loading-msg');
+  msg && msg.remove();
+  prepareColumns();
+  applyFiltersAndRender();
+}
+
+// ---------- columns ----------
+function prepareColumns() {
+  if (!rawData || rawData.length === 0) return;
+  const sample = rawData[0];
+
+  // 👇 new preferred column order
+  const preferred = [
+    'sequence',
+    'firm',
+    'enr_rank_2025',
+    'total_revenue_m',
+    'lead_score',
+    'relevance_score',
+    'completeness_score',
+    'website',
+    'industry',
+    'founded_year',
+    'country',
+    'location',
+    'water_supply_pct'
+  ];
+
+  const keys = new Set(Object.keys(sample));
+  columns = [];
+
+  // Add preferred columns first (in this order)
+  preferred.forEach(k => {
+    if (keys.has(k)) {
+      columns.push({ key: k, title: k, type: guessType(sample[k]) });
+      keys.delete(k);
+    }
+  });
+
+  // Add any remaining columns alphabetically
+  Array.from(keys)
+    .sort()
+    .forEach(k => columns.push({ key: k, title: k, type: guessType(sample[k]) }));
+}
+function guessType(v) {
+  if (typeof v === 'number') return 'number';
+  if (Array.isArray(v)) return 'array';
+  if (isPlainObject(v)) return 'object';
+  return 'string';
+}
+
+// ---------- filtering, sorting, rendering ----------
+function applyFiltersAndRender() {
+  visibleData = rawData.filter(item => {
+    for (const key in filters) {
+      const q = filters[key].trim().toLowerCase();
+      if (!q) continue;
+      const cell = stringifyCell(item[key] ?? '');
+      if (!cell.toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  if (sortState.key && sortState.dir) {
+    const k = sortState.key;
+    const dir = sortState.dir === 'asc' ? 1 : -1;
+    visibleData.sort((a,b)=>compareCells(a[k],b[k])*dir);
+  }
+
+  renderTable();
+}
+function compareCells(a,b){
+  const as=stringifyCell(a).toLowerCase(), bs=stringifyCell(b).toLowerCase();
+  if(as<bs)return-1;if(as>bs)return 1;return 0;
+}
+
+// ---------- render table ----------
+function renderTable(){
+  const wrap=document.getElementById('table-area');
+  wrap.innerHTML='';
+  if(!columns.length){wrap.innerHTML='<div class="no-data">No data.</div>';return;}
+  const table=document.createElement('table');
+  const thead=document.createElement('thead');
+  const tr=document.createElement('tr');
+
+  const thView=document.createElement('th');
+  thView.style.width='90px';
+  thView.innerHTML='<div class="col-head"><span class="title">View</span></div>';
+  tr.appendChild(thView);
+
+  columns.forEach(col=>{
+    const th=document.createElement('th');
+    const initW=Math.min(200,Math.max(110,col.title.length*12));
+    th.style.width=initW+'px';
+    th.setAttribute('data-key',col.key);
+
+    const head=document.createElement('div');
+    head.className='col-head';
+    const title=document.createElement('div');
+    title.className='title';
+    title.textContent=col.title;
+    head.appendChild(title);
+
+    const actions=document.createElement('div');
+    actions.className='actions';
+    const sortBtn=document.createElement('div');
+    sortBtn.className='sort-btn';
+    updateSortBtnUI(sortBtn,col.key);
+    sortBtn.addEventListener('click',()=>{
+      toggleSort(col.key);
+      document.querySelectorAll('.sort-btn').forEach(elem=>{
+        updateSortBtnUI(elem,elem.parentElement.parentElement.getAttribute('data-key'));
+      });
+    });
+    actions.appendChild(sortBtn);
+    head.appendChild(actions);
+    th.appendChild(head);
+
+    const filterDiv=document.createElement('div');
+    filterDiv.className='filter';
+    const input=document.createElement('input');
+    input.type='text';
+    input.placeholder='Filter...';
+    input.value=filters[col.key]||'';
+    input.addEventListener('input',e=>{
+      filters[col.key]=e.target.value;
+      applyFiltersAndRender();
+    });
+    filterDiv.appendChild(input);
+    th.appendChild(filterDiv);
+
+    const resizer=document.createElement('div');
+    resizer.className='resizer';
+    setupColumnResizer(th,resizer);
+    th.appendChild(resizer);
+    tr.appendChild(th);
+  });
+
+  thead.appendChild(tr);
+  table.appendChild(thead);
+
+  const tbody=document.createElement('tbody');
+  if(visibleData.length===0){
+    const trEmpty=document.createElement('tr');
+    const tdEmpty=document.createElement('td');
+    tdEmpty.colSpan=columns.length+1;
+    tdEmpty.innerHTML='<div style="padding:20px"><strong>No rows match filters</strong><div class="small-muted">Clear filters to view all leads</div></div>';
+    trEmpty.appendChild(tdEmpty);
+    tbody.appendChild(trEmpty);
+  }else{
+    visibleData.forEach(row=>{
+      const trRow=document.createElement('tr');
+      const tdView=document.createElement('td');
+      tdView.style.width='90px';
+      const vbtn=document.createElement('button');
+      vbtn.className='view-btn';
+      vbtn.textContent='View';
+      vbtn.addEventListener('click',()=>openDetailPage(row));
+      tdView.appendChild(vbtn);
+      trRow.appendChild(tdView);
+
+      columns.forEach(col=>{
+        const td=document.createElement('td');
+        const val=row[col.key];
+        const span=document.createElement('span');
+        span.className='cell';
+        span.title=stringifyCell(val);
+        span.textContent=stringifyCell(val);
+        td.appendChild(span);
+        trRow.appendChild(td);
+      });
+
+      tbody.appendChild(trRow);
+    });
+  }
+
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+}
+
+// ---------- sorting ----------
+function toggleSort(key){
+  if(sortState.key!==key){sortState.key=key;sortState.dir='asc';}
+  else{
+    if(sortState.dir==='asc')sortState.dir='desc';
+    else if(sortState.dir==='desc'){sortState.key=null;sortState.dir=null;}
+    else sortState.dir='asc';
+  }
+  applyFiltersAndRender();
+}
+function updateSortBtnUI(btnElem,key){
+  const active=sortState.key===key&&sortState.dir;
+  btnElem.classList.toggle('active',active);
+  if(!active)btnElem.textContent='⇅';
+  else btnElem.textContent=sortState.dir==='asc'?'↑':'↓';
+}
+
+// ---------- column resizing ----------
+function setupColumnResizer(th,handle){
+  let startX,startWidth;
+  handle.addEventListener('mousedown',function(e){
+    e.preventDefault();
+    startX=e.clientX;
+    startWidth=th.getBoundingClientRect().width;
+    document.body.style.cursor='col-resize';
+    function onMouseMove(ev){
+      const dx=ev.clientX-startX;
+      let newW=Math.max(60,startWidth+dx);
+      th.style.width=newW+'px';
+    }
+    function onMouseUp(){
+      document.removeEventListener('mousemove',onMouseMove);
+      document.removeEventListener('mouseup',onMouseUp);
+      document.body.style.cursor='';
+    }
+    document.addEventListener('mousemove',onMouseMove);
+    document.addEventListener('mouseup',onMouseUp);
+  });
+}
+
+// ---------- open detail ----------
+function openDetailPage(row){
+  const id='lead_'+(row.sequence||Math.random().toString(36).slice(2));
+  sessionStorage.setItem(id,JSON.stringify(row));
+  const url='lead_detail.html?id='+encodeURIComponent(id);
+  window.open(url,'_blank');
+}
+
+// ---------- controls ----------
+document.getElementById('btn-reset-filters').addEventListener('click',()=>{
+  filters={};sortState={key:null,dir:null};
+  document.querySelectorAll('thead input[type="text"]').forEach(i=>i.value='');
+  applyFiltersAndRender();
+});
+let wrapText=false;
+document.getElementById('btn-toggle-wrap').addEventListener('click',()=>{
+  wrapText=!wrapText;
+  document.querySelectorAll('.cell').forEach(c=>{
+    if(wrapText){c.style.whiteSpace='normal';c.style.maxWidth='none';}
+    else{c.style.whiteSpace='nowrap';c.style.maxWidth='var(--max-initial-col)';}
+  });
+});
+document.getElementById('btn-download-json').addEventListener('click',()=>{
+  const dataStr=JSON.stringify(visibleData,null,2);
+  const blob=new Blob([dataStr],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='leads_visible.json';
+  document.body.appendChild(a);
+  a.click();a.remove();URL.revokeObjectURL(url);
+});
+
+// ---------- run ----------
+init();
+</script>
+</body>
+</html>
